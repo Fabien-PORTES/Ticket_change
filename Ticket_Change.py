@@ -25,13 +25,18 @@ variables.set_date_columns(datetime_var)
 variables.set_text_columns(text_var)
 variables.set_numeric_columns(numeric_var)
 
-
 df_list = []
 for f in files:
     print(f)
     df_list.append(imp.read_excel(f, variables))
+#si les dataframes de df_list ot pas les memes colonnes, l'ordre des colonnes est pété a la concaténation
 df = pd.concat(df_list, axis = 0, ignore_index = True)
 df = df.drop_duplicates()
+
+#df.to_csv(path_or_buf = "merged.csv", sep = ";", encoding = 'utf-8')
+
+#for var in text_var:
+#    df[var] = df[var].astype('category')
 
 print(df.describe(include = 'all'))
 

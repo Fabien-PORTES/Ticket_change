@@ -2,10 +2,13 @@
 """
 Created on Thu Jun 30 12:00:13 2016
 
+Allow to import excel files to pandas dataframe without issues on excel cells format
+
 @author: fportes
 """
 
 import pandas as pd
+import numpy as np
 import xlrd, datetime
 from collections import OrderedDict
 
@@ -34,9 +37,6 @@ class columns:
             self.given_vars[k].reset_idx()
             self.given_vars[k].reset_in_excel()
 
-
-
-
 class column:
     def __init__(self, dtype):
         self.dtype = dtype
@@ -56,7 +56,6 @@ class column:
         return self.index
     def get_in_excel():
         return self.in_excel        
-        
 
 def convert_to_date(excel_sec, book, missing):
         if excel_sec is not '':
@@ -76,6 +75,8 @@ def convert_to_text(data, missing):
         return str(data)
         
 def read_excel(path, cols):
+    ''' Read excel file and create a dataframe with the columns order of excel table
+    '''
     book = xlrd.open_workbook(path)
     sheet = book.sheet_by_index(0)
 
@@ -89,12 +90,11 @@ def read_excel(path, cols):
     for col, col_attr in cols.ordered_var.items():
         col_values = sheet.col_values(col_attr.index)[1:]
         if col_attr.dtype == 'text':
-            d = [convert_to_text(t, "NaN") for t in col_values]
+            d = [convert_to_text(t, np.nan) for t in col_values]
         elif col_attr.dtype == 'datetime':
-            d = [convert_to_date(date, book, -1) for date in col_values]
+            d = [convert_to_date(date, book, np.nan) for date in col_values]
         elif col_attr.dtype == 'numeric':
-            d = [convert_to_num(f, -1) for f in col_values]
+            d = [convert_to_num(f, np.nan) for f in col_values]
         df.loc[:,col] = pd.Series(d)
     cols.reset()
     return df
-
