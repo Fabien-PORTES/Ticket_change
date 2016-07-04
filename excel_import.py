@@ -73,7 +73,14 @@ def convert_to_text(data, missing):
         return missing
     else:
         return str(data)
-        
+
+def get_date_from_path(path):
+    name = path[path.lower().rfind("change_") + 7:path.rfind('.')]
+    (date, AP_M) = name.split('_')
+    d = datetime.datetime.strptime(date, "%Y%m%d")
+    return d, AP_M
+    
+
 def read_excel(path, cols):
     ''' Read excel file and create a dataframe with the columns order of excel table
     '''
@@ -85,7 +92,8 @@ def read_excel(path, cols):
         cols.given_vars[col].in_excel = True
         cols.given_vars[col].set_index(idx)
     cols.sort()
-
+    
+    date, AP_M = get_date_from_path(path)
     df = pd.DataFrame()
     for col, col_attr in cols.ordered_var.items():
         col_values = sheet.col_values(col_attr.index)[1:]
@@ -96,5 +104,8 @@ def read_excel(path, cols):
         elif col_attr.dtype == 'numeric':
             d = [convert_to_num(f, np.nan) for f in col_values]
         df.loc[:,col] = pd.Series(d)
+    #df = df.drop_duplicates()
+    df["date_file"] = date
+    df["AM_PM_file"] = AP_M
     cols.reset()
     return df

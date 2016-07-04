@@ -31,9 +31,9 @@ for f in files:
     df_list.append(imp.read_excel(f, variables))
 #si les dataframes de df_list ot pas les memes colonnes, l'ordre des colonnes est pété a la concaténation
 df = pd.concat(df_list, axis = 0, ignore_index = True)
-df = df.drop_duplicates()
+df = df.drop_duplicates(text_var + datetime_var + numeric_var)
 
-#df.to_csv(path_or_buf = "merged.csv", sep = ";", encoding = 'utf-8')
+df.to_csv(path_or_buf = "merged.csv", sep = ";", encoding = 'utf-8')
 
 #for var in text_var:
 #    df[var] = df[var].astype('category')
