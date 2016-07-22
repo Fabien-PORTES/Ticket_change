@@ -58,6 +58,10 @@ class column:
         return self.in_excel        
 
 def convert_to_date(excel_sec, book, missing):
+        """Convertit des secondes issues d'un fichier excel en dates,
+        en faisant fi du format de la cellule
+        Retourne missing si la cellule est vide.
+        """
         if excel_sec is not '':
             date = xlrd.xldate_as_tuple(excel_sec, book.datemode)
             return str(datetime.datetime(*date))
