@@ -10,6 +10,8 @@ path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\'
 files = [path + f for f in os.listdir(path) if "change" in f[0:6].lower()]
 #file = path + "change_20151113_PM.xlsx"
 
+#Les variables et leur format doivent etre renseigné dans les listes suivantes.
+
 datetime_var = ["Request_For_Change_Time", "Scheduled_for_Approval_Time", "Scheduled_Start_Date",
                "Scheduled_End_Date", "Restart_After_Pending_Time", "Actual_End_Date",
                "INST_Task_Closed_Time"]
@@ -29,14 +31,11 @@ df_list = []
 for f in files:
     print(f)
     df_list.append(imp.read_excel(f, variables))
-#si les dataframes de df_list ot pas les memes colonnes, l'ordre des colonnes est pété a la concaténation
+#si les dataframes de df_list ot pas les memes colonnes, l'ordre des colonnes est cassé à la concaténation
 df = pd.concat(df_list, axis = 0, ignore_index = True)
 df = df.drop_duplicates(text_var + datetime_var + numeric_var)
 
-df.to_csv(path_or_buf = "merged.csv", sep = ";", encoding = 'utf-8')
+df.to_csv(path_or_buf = path + "merged.csv", sep = ";", encoding = 'utf-8')
 
-#for var in text_var:
-#    df[var] = df[var].astype('category')
-
-print(df.describe(include = 'all'))
+#print(df.describe(include = 'all'))
 
