@@ -21,7 +21,7 @@ rcParams.update({'figure.autolayout': True})
 
 path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\'
 additional_data_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\additional_data\\REFERENCE\\"
-save_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\plot\\"
+save_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\"
 
 files = [path + f for f in os.listdir(path) if "change" in f[0:6].lower()]
 file = path + "merged.csv"
@@ -60,8 +60,6 @@ def rm_accents_tiret(data):
     data = str(data).replace("_", " ")
     return " ".join((unidecode(data)).lower().split())
 df["INST_Task_Assignee_ascii"] = df["INST_Task_Assignee"].apply(rm_accents_tiret)
-
-# In[15]:
 
 # importation des équipes et ajout de la variable ancienneté
 equipe = additional_data_path + "Equipe.xlsx"
@@ -112,7 +110,8 @@ df["weekday_Request_For_Change_Time"] = df["Request_For_Change_Time"].apply(lamb
 df["month_Request_For_Change_Time"] = df["Request_For_Change_Time"].apply(lambda x: x.month)
 df["year_Request_For_Change_Time"] = df["Request_For_Change_Time"].apply(lambda x: x.year)
 df["hour_Request_For_Change_Time"] = df["Request_For_Change_Time"].apply(lambda x: x.hour)
-
+predictors.extend(["weekday_Request_For_Change_Time", "month_Request_For_Change_Time",
+                  "year_Request_For_Change_Time", "hour_Request_For_Change_Time"])
 #extract informations from labels avec des expressions regulières
 df[["TOC_code","TOC_level"]] = df['Type_of_Change'].str.extract("(?:.*?)-(?P<TOC_code>.*?)\s*(?:-\s*(?:.*?))*(?:[/|-](?P<TOC_level>.*))", expand = True)
 df["TOC_level"] = df["TOC_level"].str.strip()
@@ -143,7 +142,7 @@ def recode_inf_5(dfme, var):
     où les modalités dont l'effectif est inferieur à 5% ont été regroupe sous le label Inf_5_percent
     les valeurs manquantes sont remplacé par la valeur "Missing" et ne sont pas regroupé meme si inf a 5%
     """
-    var_recoded = var + "_5"
+    var_recoded = var + "_Modified"
     mod_inf_5 = dfme[var].value_counts()[dfme[var].value_counts(normalize=True, dropna=False) < 0.05].index.tolist()
     dfme[var_recoded] = dfme[var].astype("object")
     dfme[var_recoded].fillna("Missing",  inplace=True)
@@ -152,7 +151,7 @@ def recode_inf_5(dfme, var):
     return dfme[var_recoded]
 def missing(dfme, var):
     """replace missing par le label missing"""
-    var_recoded = var + "_filled"
+    var_recoded = var + "_Modified"
     dfme[var_recoded] = dfme[var].astype("object")
     dfme[var_recoded].fillna("Missing",  inplace=True)
     return dfme[var_recoded]
@@ -160,9 +159,8 @@ def missing(dfme, var):
 
 #Performance_Rating
 var = "Performance_Rating"
-var_recoded = var + "_Recoded"
-plot(df, var)
-print(df[var].cat.categories)
+var_recoded = var + "_Modified"
+#plot(df, var)
 df[var_recoded] = pd.to_numeric(df[var])
 df[var_recoded] = ((df[var_recoded]< 3) & (df[var_recoded] >= 0)) * 1 + (df[var_recoded]>= 3) * 2
 df[var_recoded] = df[var_recoded].astype('category')
@@ -172,21 +170,21 @@ predictors.append(var_recoded)
 
 #INST_techno_gpe
 var = "INST_techno_gpe"
-var_5 = var + "_5"
+var_5 = var + "_Modified"
 df[var_5] = recode_inf_5(df, var)
-plot(df, var_5)
+#plot(df, var_5)
 predictors.append(var_5)
 
 #INST_desc_techno
 var = "INST_desc_techno"
-var_5 = var + "_filled"
+var_5 = var + "_Modified"
 df[var_5] = missing(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
 #TOC_code
 var = "TOC_code"
-var_5 = var + "_Reduced"
+var_5 = var + "_Modified"
 #df[var_5] = recode_inf_5(df, var)
 df[var_5] = df[var].str.extract("(?P<TOC_code_reduced>.+)\d", expand = True)
 df[var_5].fillna("Missing", inplace = True)
@@ -196,14 +194,14 @@ predictors.append(var_5)
 
 #TOC_level
 var = "TOC_level"
-var_5 = var + "_5"
+var_5 = var + "_Modified"
 df[var_5] = recode_inf_5(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
 #EIST_Domain_ICT_reduced
 var = "EIST_Domain_ICT_reduced"
-var_recoded = var + "_Recoded"
+var_recoded = var + "_Modified"
 #df[var_recoded] = recode_inf_5(df, var)
 
 mod_inf_5 = df[var].value_counts()[df[var].value_counts(normalize=True, dropna=False) < 0.05].index.tolist()
@@ -216,21 +214,21 @@ predictors.append(var_5)
 
 #INST_Task_Assignee
 var = "INST_Task_Assignee"
-var_5 = var + "_5"
+var_5 = var + "_Modified"
 df[var_5] = recode_inf_5(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
 #Support_Group_Name+
 var = "Support_Group_Name+"
-var_5 = var + "_5"
+var_5 = var + "_Modified"
 df[var_5] = recode_inf_5(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
 #anciennete
 var = "anciennete"
-var_recoded = var + "_Recoded"
+var_recoded = var + "_Modified"
 df[var_recoded] = ((df[var]< 5) & (df[var] >= 0)) * 1 + (df[var] == 5) * 2
 df[var_recoded] = df[var_recoded].astype('category')
 df[var_recoded].cat.categories = ["Missing", "< 5ans", "5 ans"]
@@ -239,7 +237,7 @@ predictors.append(var_recoded)
 
 #INST_Task_Assignee
 var = "INST_Task_Assignee"
-var_recoded = var + "_Filled"
+var_recoded = var + "_Modified"
 df[var_recoded] = missing(df, var)
 #plot(df, var_recoded)
 predictors.append(var_recoded)
@@ -252,9 +250,8 @@ to_save = list(set(to_save))
 df["Summary"] = df["Summary"].apply(rm_accents_tiret)
 
 to_save = list(set(to_save))
-df[to_save].to_csv("D:\\Users\\FPORTES\\Documents\\Ticket_ML\\prepared_df_sum.csv", sep = ";", encoding = 'utf-8')
+df[to_save].to_csv(save_path + "prepared_df_sum.csv", sep = ";", encoding = 'utf-8')
 
-df[to_save].isnull().any()
 
 
 

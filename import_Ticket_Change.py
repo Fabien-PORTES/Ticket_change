@@ -4,7 +4,7 @@
 """
 import pandas as pd
 import os
-import excel_import as imp
+import excelImport as imp
 
 path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\'
 files = [path + f for f in os.listdir(path) if "change" in f[0:6].lower()]
@@ -28,9 +28,22 @@ variables.set_text_columns(text_var)
 variables.set_numeric_columns(numeric_var)
 
 df_list = []
+
+try:
+    datafram = pd.read_csv(path + "merged.csv", sep = ";", index_col = 0)
+except OSError:
+    print("Le fichier merged n'existe pas.")
+datafram['date_file'] = pd.to_datetime(datafram['date_file'],infer_datetime_format=True)
+last_date =  datafram['date_file'].max()
+print(last_date)
+
 for f in files:
     print(f)
-    df_list.append(imp.read_excel(f, variables))
+    date, AM_PM = imp.get_date_from_path(f)
+    if date > last_date:
+        df_list.append(imp.read_excel(f, variables))
+    else:
+        pass
 #si les dataframes de df_list ot pas les memes colonnes, l'ordre des colonnes est cassé à la concaténation
 df = pd.concat(df_list, axis = 0, ignore_index = True)
 df = df.drop_duplicates(text_var + datetime_var + numeric_var)
