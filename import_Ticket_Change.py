@@ -5,6 +5,7 @@
 import pandas as pd
 import os
 import excelImport as imp
+import datetime
 
 path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\'
 files = [path + f for f in os.listdir(path) if "change" in f[0:6].lower()]
@@ -31,10 +32,11 @@ df_list = []
 
 try:
     datafram = pd.read_csv(path + "merged.csv", sep = ";", index_col = 0)
+    datafram['date_file'] = pd.to_datetime(datafram['date_file'],infer_datetime_format=True)
+    last_date =  datafram['date_file'].max()
 except OSError:
     print("Le fichier merged n'existe pas.")
-datafram['date_file'] = pd.to_datetime(datafram['date_file'],infer_datetime_format=True)
-last_date =  datafram['date_file'].max()
+    last_date = datetime.datetime(2000, 1, 1)
 print(last_date)
 
 for f in files:

@@ -88,21 +88,22 @@ for index, row in df_holiday.iterrows():
             ((df['Scheduled_Start_Date']<= fin) & (df['Scheduled_End_Date'] >= fin)))) * 1
 #df["holiday"].describe()
 
-import workingTime as workTime
+from workingTime import working_time, working_day
 #construction variable cible : 1 si ticket défaillant, 0 sinon !
-SLA = pd.Timedelta(days = 2) # 2 jours
 
-# ticket défaillant si la date de livraison prévu est inférieure à la date de livraison effective
-df['target_actual_effective'] = df["Scheduled_End_Date"] - df["Actual_End_Date"]
-df['target_actual_effective_bin'] = 1 * (df["target_actual_effective"] > pd.Timedelta(0))
-
-#cible sans tenir compte des heures de travail. donne un petit quelque chose
-df['target_T0-T1'] = df["Scheduled_for_Approval_Time"] - df["Request_For_Change_Time"]
-df['target_T0-T1_bin'] = 1 * (df["target_T0-T1"] > SLA)
+# Défaillant si délai de traitement supérieur à 14h sans compter les week end et uniquement pendant les
+# heures de travail (8h-18h)
+SLA = pd.Timedelta(hours = 14)
+df["delay_14h"] = df.apply(working_time, axis = 1)
+df['delay_14h_bin'] = 1 * (df["delay_14h"] > SLA)
+# Défaillant si délai de traitement supérieur à 48h sans compter les week end
+SLA = pd.Timedelta(days = 2)
+df["delay_48h"] = df.apply(working_day, axis = 1)
+df['delay_48h_bin'] = 1 * (df["delay_48h"] > SLA)
 
 #print("yolo", working_time(d))
 #cible en tenant compte des heures de travail. ne donne rien
-df["delay"] = df.apply(workTime.working_time, axis = 1)
+df["delay"] = df.apply(working_time, axis = 1)
 df['delay_bin'] = 1 * (df["delay"] > SLA)
 
 #La date de soumission du ticket est éclaté
@@ -121,9 +122,9 @@ df["TOC_level"] = df["TOC_level"].str[0]
 
 df[["INST_techno_gpe","INST_desc_techno"]] = df['INST_Task_Name'].str.extract("(?:\w)_(?P<INST_techno_gpe>.*?)\s*_\s*(?P<INST_desc_techno>.*)", expand = True)
 
-df['EIST_Domain_ICT_reduced'] = df['EIST_Domain_ICT'].str[0:2]
+#df['EIST_Domain_ICT_reduced'] = df['EIST_Domain_ICT'].str[0:2]
 
-categorical_var += ["TOC_code","TOC_level","INST_techno_gpe","INST_desc_techno","EIST_Domain_ICT_reduced"]
+categorical_var += ["TOC_code","TOC_level","INST_techno_gpe","INST_desc_techno"]
 
 
 for var in categorical_var:
@@ -200,22 +201,22 @@ df[var_5] = recode_inf_5(df, var)
 predictors.append(var_5)
 
 #EIST_Domain_ICT_reduced
-var = "EIST_Domain_ICT_reduced"
+var = "EIST_Domain_ICT"
 var_recoded = var + "_Modified"
-#df[var_recoded] = recode_inf_5(df, var)
+df[var_recoded] = missing(df, var)
 
-mod_inf_5 = df[var].value_counts()[df[var].value_counts(normalize=True, dropna=False) < 0.05].index.tolist()
-df[var_recoded] = df[var].astype("object")
-df[var_recoded].fillna("Missing",  inplace=True)
-df.loc[df[var_recoded].isin(l for l in mod_inf_5 if l.lower() != "s"), var_recoded] = "Inf_5"
-df[var_recoded] = df[var_recoded].astype('category')
+#mod_inf_5 = df[var].value_counts()[df[var].value_counts(normalize=True, dropna=False) < 0.05].index.tolist()
+#df[var_recoded] = df[var].astype("object")
+#df[var_recoded].fillna("Missing",  inplace=True)
+#df.loc[df[var_recoded].isin(l for l in mod_inf_5 if l.lower() != "s"), var_recoded] = "Inf_5"
+#df[var_recoded] = df[var_recoded].astype('category')
 #plot(df, var_recoded)
-predictors.append(var_5)
+predictors.append(var_recoded)
 
 #INST_Task_Assignee
 var = "INST_Task_Assignee"
 var_5 = var + "_Modified"
-df[var_5] = recode_inf_5(df, var)
+df[var_5] = missing(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
@@ -244,12 +245,12 @@ predictors.append(var_recoded)
 
 #Liste de predicteurs
 predictors += ["Request_For_Change_Time", "Summary"]
-to_save = predictors + ["target_actual_effective_bin"]
-to_save = list(set(to_save))
+to_save = predictors + ["delay_48h_bin", "delay_14h_bin"]
 
 df["Summary"] = df["Summary"].apply(rm_accents_tiret)
 
 to_save = list(set(to_save))
+print(to_save)
 df[to_save].to_csv(save_path + "prepared_df_sum.csv", sep = ";", encoding = 'utf-8')
 
 
