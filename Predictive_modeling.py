@@ -1,26 +1,30 @@
 #-*- coding: utf-8 -*-
-
-import os
+import json, sys
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from sklearn.grid_search import GridSearchCV
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import roc_curve, auc, confusion_matrix
+from sklearn.metrics import roc_curve, auc
 from sklearn.linear_model import LogisticRegression
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 
-from sklearn.feature_selection import RFE
-
-from sklearn.feature_selection import chi2
-from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
-
 from sklearn import svm
-# In[2]:
+
+
+to_parse = " ".join(sys.argv[1:])
+user_input = json.loads(to_parse)
+path = user_input['path_data']
+path_to_save = user_input['path_to_save']
+important_feature_file = user_input['important_feature_file']
+
+
+#path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\cleaned_data_changes.csv"
+#path_to_save = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\Ticket_change_predicted.csv"
+#important_feature_file = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\Important_features.txt"
 
 def modelEvaluation(y_test,y_pred):
 
@@ -52,7 +56,6 @@ def modelEvaluation(y_test,y_pred):
     print('\n''#==========================================#''\n')
     
     false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_pred)
-    print(thresholds)
     roc_auc = auc(false_positive_rate, true_positive_rate)
     plt.title('Receiver Operating Characteristic')
     plt.plot(false_positive_rate, true_positive_rate, 'b', label='AUC = %0.2f'% roc_auc)
@@ -63,13 +66,6 @@ def modelEvaluation(y_test,y_pred):
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.show()
-
-
-# In[3]:
-
-path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\Text_mining.csv"
-path_to_save = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\Ticket_change_predicted.csv"
-important_feature_file = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\Important_feature.txt"
 
 data = pd.read_csv(path, sep=';', index_col = "ID", low_memory = False)
 
@@ -144,17 +140,18 @@ from sklearn import svm
 from sklearn.preprocessing import scale
 
 # SVM -----------
-#param= {"class_weight":['balanced'],
-#        "kernel" : ['linear'],
-#        "shrinking" : [True],
-#        "C" : [ 0.05, 0.005, 0.01]}
-#
+param= {"class_weight":['balanced', None],
+        "kernel" : ['linear', 'rbf'],
+        "shrinking" : [True, False],
+        "C" : [ 0.05, 0.005, 0.01]}
+
 #estim = svm.SVC()
 #logit = GridSearchCV(estim, param, cv=2, n_jobs=1, scoring = "roc_auc") 
 #data_logit=logit.fit(X_train,y_train)
 #best_param = data_logit.best_params_
 #print(best_param)
-best_param = {'kernel': 'linear', 'class_weight': 'balanced', 'C': 0.01, 'shrinking': True}
+#best_param = {'kernel': 'linear', 'class_weight': 'balanced', 'C': 0.01, 'shrinking': True}
+best_param = {'class_weight': 'balanced', 'shrinking': False, 'C': 0.01, 'kernel': 'linear', "probability" : True}
 estim = svm.SVC(**best_param)
 sv = estim.fit(X_train[important_features], y_train)
 ypred = sv.predict(X_test[important_features])

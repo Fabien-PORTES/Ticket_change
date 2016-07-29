@@ -1,30 +1,25 @@
 
 # coding: utf-8
-
-# In[2]:
-
-get_ipython().magic('matplotlib inline')
+import sys
 import pandas as pd
 from unidecode import unidecode
-import numpy as np
-import re
-import xlrd, os
-import datetime
-import collections
-import matplotlib.pyplot as plt
+import json
 from matplotlib import interactive
 interactive(True)
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 
-# In[3]:
+to_parse = " ".join(sys.argv[1:])
+user_input = json.loads(to_parse)
+merged_data_path = user_input['merged_data_path']
+save_path = user_input['save_path']
+holiday_path = user_input['holiday_path']
+equipe_path = user_input['equipe_path']
 
-path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\'
-additional_data_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\additional_data\\REFERENCE\\"
-save_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\"
-
-files = [path + f for f in os.listdir(path) if "change" in f[0:6].lower()]
-file = path + "merged.csv"
+#merged_data_path = 'D:\\Users\\FPORTES\\Documents\\Ticket_ML\\CoC_Tickets_MachineLeaning\\merged.csv'
+#save_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\cleaned_data_change_without_TM.csv"
+#holiday_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\additional_data\\REFERENCE\\holidays.xlsx"
+#equipe_path = "D:\\Users\\FPORTES\\Documents\\Ticket_ML\\additional_data\\REFERENCE\\Equipe.xlsx"
 
 datetime_var = ["Request_For_Change_Time", "Scheduled_for_Approval_Time", "Scheduled_Start_Date",
                "Scheduled_End_Date", "Restart_After_Pending_Time", "Actual_End_Date",
@@ -40,7 +35,7 @@ categorical_var =[a for a in text_var if a not in ["ID", "RQ_ID", "Summary", "EI
 predictors = []
 
 #importation de fichier mergé des tickets changes
-df_init = pd.read_csv(file, sep = ";", index_col = 0)
+df_init = pd.read_csv(merged_data_path, sep = ";", index_col = 0)
 df_init.shape
 
 for var in text_var:
@@ -62,8 +57,7 @@ def rm_accents_tiret(data):
 df["INST_Task_Assignee_ascii"] = df["INST_Task_Assignee"].apply(rm_accents_tiret)
 
 # importation des équipes et ajout de la variable ancienneté
-equipe = additional_data_path + "Equipe.xlsx"
-df_equipe = pd.read_excel(equipe)
+df_equipe = pd.read_excel(equipe_path)
 df_equipe["Année Début"].fillna(df_equipe["Année Début"].min(), inplace = True)
 df_equipe["Année Fin"].fillna(df_equipe["Année Fin"].max(), inplace = True)
 for index, row in df_equipe.iterrows():
@@ -72,7 +66,7 @@ for index, row in df_equipe.iterrows():
     df.loc[df["INST_Task_Assignee_ascii"] == task_assignee, "anciennete"] = row["Année Fin"] - row["Année Début"]
 
 # importation des vacances et verification si elles ont lieu pendant la période prévisionelle de résolution d'un ticket
-holiday_path = additional_data_path + 'holidays.xlsx'
+
 df_holiday = pd.read_excel(holiday_path)
 col = ["Date debut","Date fin"]
 for var in col:
@@ -135,8 +129,6 @@ def plot(df, var):
     """
     m = df[var].value_counts(normalize=False, dropna=False).sort_values(ascending = False)
     f = m.plot(kind = 'bar')
-    f.figure.savefig(save_path + var + ".jpg", dpi = 600)
-
 
 def recode_inf_5(dfme, var):
     """crée une nouvelle variable dans la dataframe df qui represente la variable var
@@ -251,7 +243,7 @@ df["Summary"] = df["Summary"].apply(rm_accents_tiret)
 
 to_save = list(set(to_save))
 print(to_save)
-df[to_save].to_csv(save_path + "prepared_df_sum.csv", sep = ";", encoding = 'utf-8')
+df[to_save].to_csv(save_path, sep = ";", encoding = 'utf-8')
 
 
 
