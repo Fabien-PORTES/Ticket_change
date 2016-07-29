@@ -13,10 +13,12 @@ from nltk.corpus import words
 import pandas as pd
 #import numpy as np
 #import matplotlib.pyplot as plt
+from nltk import word_tokenize
 from nltk.stem import PorterStemmer
 ps = PorterStemmer()
 from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
+
 from nltk import bigrams
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -28,7 +30,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 ###############################################################################
 
 def Lemmatization(text):
-    lemma = [lemmatizer.lemmatize(word) for word in text.split(' ')]   
+    tokens = word_tokenize(text)
+    lemma = [lemmatizer.lemmatize(word) for word in tokens] 
+    lemma = [ps.stem(token) for token in lemma]
     lemma_data = ' '.join(lemma)
     return lemma_data
 
