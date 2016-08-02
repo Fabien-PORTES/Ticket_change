@@ -4,13 +4,17 @@ Created on Thu Jul 28 09:25:39 2016
 
 @author: fportes
 """
-import os, re, subprocess
+import os, re, subprocess, time
 import sys, argparse, json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("configuration_file_path", help="Path to the configuration file")
 
 conf_path = parser.parse_args().configuration_file_path
+
+main_dir = os.path.dirname(os.path.realpath(__file__))
+os.chdir(main_dir)
+
 if not os.path.isfile(conf_path):
     print("The path of the configuration file is wrong.\n%s\n does not exist." %conf_path)
     print("Execution aborted")
@@ -51,6 +55,7 @@ class Config:
             file.show_param()
     def exec_config(self):
         for file in self.scripts_list:
+            start_time = time.time()
             f, args = file.get_name_param()
             exit_code = subprocess.call([sys.executable, f, args])
             if exit_code != 0:
@@ -59,11 +64,16 @@ class Config:
             else:
                 print("The execution of the following script SUCCEEDED\nFile : \
                 {filename}\nArgs :\n{argmts}".format(filename = f, argmts = args))
-                
+            print("FILE : %s" %f)
+            print("--- %s seconds ---" % (time.time() - start_time)) 
+
+
+start = time.time()
 conf = Config(conf_path)
 conf.fill()
 conf.exec_config()
-
+print("Total execution time")
+print("--- %s seconds ---" % (time.time() - start)) 
 
 
 
