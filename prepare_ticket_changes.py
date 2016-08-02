@@ -196,7 +196,6 @@ predictors.append(var_5)
 var = "EIST_Domain_ICT"
 var_recoded = var + "_Modified"
 df[var_recoded] = missing(df, var)
-
 #mod_inf_5 = df[var].value_counts()[df[var].value_counts(normalize=True, dropna=False) < 0.05].index.tolist()
 #df[var_recoded] = df[var].astype("object")
 #df[var_recoded].fillna("Missing",  inplace=True)
@@ -242,7 +241,7 @@ to_save = predictors + ["delay_48h_bin", "delay_14h_bin"]
 df["Summary"] = df["Summary"].apply(rm_accents_tiret)
 
 to_save = list(set(to_save))
-print(to_save)
+#print(to_save)
 df[to_save].to_csv(save_path, sep = ";", encoding = 'utf-8')
 
 

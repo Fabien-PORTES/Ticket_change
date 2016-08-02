@@ -4,9 +4,6 @@ Created on Wed Jun  1 14:32:44 2016
 
 @author: lmellior
 """
-#Albertus gaelle
-
-import os
 import re
 from nltk.corpus import stopwords
 from nltk.corpus import words
@@ -19,7 +16,6 @@ ps = PorterStemmer()
 from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
 
-from nltk import bigrams
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 

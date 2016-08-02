@@ -35,7 +35,7 @@ else:
     target = "delay_48h_bin"
 
 data_init = pd.read_csv(path_to_merge, sep=';', index_col = "ID")
-print(data_init.describe())
+#print(data_init.describe())
 
 text = list()
 text = data_init["Summary"].tolist()
@@ -67,7 +67,7 @@ data_features = MergeFeatures(data_ngram, path_to_merge)
 data_features.to_csv(path_to_save , sep=';', encoding='utf-8', index = False)
 
 # Pondération avec TF IDF tdf 
-get_imp_text_features = True
+get_imp_text_features = False
 if get_imp_text_features is True:
     from sklearn.linear_model import LogisticRegression
     from sklearn.feature_selection import RFE
@@ -82,7 +82,7 @@ if get_imp_text_features is True:
     
     
     estim = LogisticRegression(class_weight="balanced", **best_param)
-    print(estim)
+    #print(estim)
     data_logit=estim.fit(data_ngram, data_init[target])
     
     selecteur = RFE(estimator=estim, n_features_to_select = 200)
