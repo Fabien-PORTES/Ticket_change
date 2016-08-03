@@ -54,16 +54,17 @@ def rm_accents_tiret(data):
     data = str(data).replace("-", " ")
     data = str(data).replace("_", " ")
     return " ".join((unidecode(data)).lower().split())
-df["INST_Task_Assignee_ascii"] = df["INST_Task_Assignee"].apply(rm_accents_tiret)
+
 
 # importation des équipes et ajout de la variable ancienneté
+df['INST_Task_Assignee_Modified'] = df['INST_Task_Assignee'].apply(rm_accents_tiret)
 df_equipe = pd.read_excel(equipe_path)
 df_equipe["Année Début"].fillna(df_equipe["Année Début"].min(), inplace = True)
 df_equipe["Année Fin"].fillna(df_equipe["Année Fin"].max(), inplace = True)
 for index, row in df_equipe.iterrows():
     task_assignee = row["Prénom"] + " " + row["Nom"]
     task_assignee = rm_accents_tiret(task_assignee)
-    df.loc[df["INST_Task_Assignee_ascii"] == task_assignee, "anciennete"] = row["Année Fin"] - row["Année Début"]
+    df.loc[df["INST_Task_Assignee_Modified"] == task_assignee, "anciennete"] = row["Année Fin"] - row["Année Début"]
 
 # importation des vacances et verification si elles ont lieu pendant la période prévisionelle de résolution d'un ticket
 
@@ -188,7 +189,7 @@ predictors.append(var_5)
 #TOC_level
 var = "TOC_level"
 var_5 = var + "_Modified"
-df[var_5] = recode_inf_5(df, var)
+df[var_5] = missing(df, var)
 #plot(df, var_5)
 predictors.append(var_5)
 
@@ -207,7 +208,7 @@ predictors.append(var_recoded)
 #INST_Task_Assignee
 var = "INST_Task_Assignee"
 var_5 = var + "_Modified"
-df[var_5] = missing(df, var)
+df[var_5] = missing(df, var_5)
 #plot(df, var_5)
 predictors.append(var_5)
 
@@ -227,12 +228,21 @@ df[var_recoded].cat.categories = ["Missing", "< 5ans", "5 ans"]
 #plot(df, var_recoded)
 predictors.append(var_recoded)
 
-#INST_Task_Assignee
-var = "INST_Task_Assignee"
-var_recoded = var + "_Modified"
-df[var_recoded] = missing(df, var)
-#plot(df, var_recoded)
-predictors.append(var_recoded)
+#ProgramName
+var = "ProgramName"
+var_5 = var + "_Modified"
+df[var_5] = df[var].apply(rm_accents_tiret)
+df[var_5] = missing(df, var_5)
+#plot(df, var_5)
+predictors.append(var_5)
+
+#ApplicationCode
+var = "ApplicationCode"
+var_5 = var + "_Modified"
+df[var_5] = df[var].apply(rm_accents_tiret)
+df[var_5] = missing(df, var_5)
+#plot(df, var_5)
+predictors.append(var_5)
 
 #Liste de predicteurs
 predictors += ["Request_For_Change_Time", "Summary"]

@@ -12,6 +12,8 @@ from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
 
 
+get_imp_text_features = True
+
 to_parse = " ".join(sys.argv[1:])
 user_input = json.loads(to_parse)
 french_dict_path = user_input['french_dict_path']
@@ -67,7 +69,7 @@ data_features = MergeFeatures(data_ngram, path_to_merge)
 data_features.to_csv(path_to_save , sep=';', encoding='utf-8', index = False)
 
 # Pondération avec TF IDF tdf 
-get_imp_text_features = False
+
 if get_imp_text_features is True:
     from sklearn.linear_model import LogisticRegression
     from sklearn.feature_selection import RFE

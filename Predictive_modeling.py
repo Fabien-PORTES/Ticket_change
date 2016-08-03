@@ -72,11 +72,14 @@ data = pd.read_csv(path, sep=';', index_col = "ID", low_memory = False)
 target_list = ['delay_48h_bin', "delay_14h_bin"]
 to_encode = ['anciennete_Modified',
        'INST_Task_Assignee_Modified', 'Support_Group_Name+_Modified',
-       'INST_techno_gpe_Modified', 'TOC_code_Modified',
+       'INST_techno_gpe_Modified', 'TOC_code_Modified', 'ApplicationCode_Modified',
        'TOC_level_Modified', 'INST_Task_Assignee_Modified', 'Performance_Rating_Modified',
-       'INST_desc_techno_Modified', 'EIST_Domain_ICT_Modified']
+       'INST_desc_techno_Modified', 'EIST_Domain_ICT_Modified', 'ProgramName_Modified']
 #print(data[to_encode])
 #print(data.shape)
+for var in to_encode:
+    data[var] = data[var].astype(str)
+
 data[to_encode] = data[to_encode].apply(LabelEncoder().fit_transform)
 
 target_14h = False
@@ -89,6 +92,7 @@ else:
 non_predictive_var = target_list + ['Request_For_Change_Time', "Summary"]
 
 X = data[[str(c) for c in data.columns if c not in non_predictive_var]]  # variables explicatives
+#print(X.columns)
 y = data[target] # variable a modeliser
 
 
@@ -128,13 +132,12 @@ with open(important_feature_file) as f:
 ###   SVM   ###
 ####################
 from sklearn import svm
-from sklearn.preprocessing import scale
+#from sklearn.preprocessing import scale
 
-# SVM -----------
-param= {"class_weight":['balanced', None],
-        "kernel" : ['linear', 'rbf'],
-        "shrinking" : [True, False],
-        "C" : [ 0.05, 0.005, 0.01]}
+#param= {"class_weight":['balanced', None],
+#        "kernel" : ['linear', 'rbf'],
+#        "shrinking" : [True, False],
+#        "C" : [ 0.05, 0.005, 0.01]}
 
 #estim = svm.SVC()
 #logit = GridSearchCV(estim, param, cv=2, n_jobs=1, scoring = "roc_auc") 
@@ -143,16 +146,18 @@ param= {"class_weight":['balanced', None],
 #print(best_param)
 #best_param = {'kernel': 'linear', 'class_weight': 'balanced', 'C': 0.01, 'shrinking': True}
 
-best_param = {'class_weight': 'balanced', 'shrinking': False, 'C': 0.01, 'kernel': 'linear', "probability" : True}
+best_param = {'class_weight': 'balanced', 'shrinking': False, 'C': 0.01, 'kernel': 'linear', "probability" : False}
 estim = svm.SVC(**best_param)
 sv = estim.fit(X_train[important_features], y_train)
 ypred = sv.predict(X_test[important_features])
 x_train_pred = sv.predict(X_train[important_features])
-#modelEvaluation(y_test.values, ypred)
-#modelEvaluation(y_train.values, x_train_pred)
+modelEvaluation(y_test.values, ypred)
+modelEvaluation(y_train.values, x_train_pred)
 
 data['target_predicted'] = estim.predict(data[important_features])
-data["Failure_probability"] = estim.predict_proba(data[important_features])[:,1]
+data["Failure_probability"] = estim.decision_function(data[important_features])
+#scale the decision function to [0;1]
+data["Failure_probability"] = (data["Failure_probability"] - data["Failure_probability"].min())/(data["Failure_probability"].max() - data["Failure_probability"].min())
 
 to_save = ['target_predicted', 'Failure_probability'] + important_features
 data[to_save].to_csv(path_to_save, sep = ";", encoding = 'utf-8')
